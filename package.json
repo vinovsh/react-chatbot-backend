@@ -12,6 +12,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/joi": "^17.2.2",
+    "@types/multer": "^2.0.0",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
@@ -25,9 +27,11 @@
     "i18next": "^25.6.0",
     "i18next-fs-backend": "^2.6.0",
     "i18next-http-middleware": "^3.8.1",
+    "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1",
     "morgan": "^1.10.1",
+    "multer": "^2.0.2",
     "uuid": "^13.0.0",
     "winston": "^3.18.3"
   },
