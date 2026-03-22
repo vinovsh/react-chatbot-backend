@@ -5,10 +5,16 @@ import { findUserByEmail } from '../user/user.service';
 import { randomUUID } from 'crypto';
 
 export async function signup(req: Request, res: Response) {
-  const { email, password, name } = req.body;
+  const { email, password, name, timezone } = req.body as {
+    email: string;
+    password: string;
+    name: string;
+    timezone?: string;
+  };
   const existing = await findUserByEmail(email);
   if (existing) return res.status(409).json({ success: false, message: req.t("auth.email_already_in_use", { ns: "auth" }) });
-  const user = await userService.createUser({ email, password, name });
+  const signupIp = req.ip;
+  const user = await userService.createUser({ email, password, name, signupTimezone: timezone, signupIp });
   const accessToken = authService.signAccessToken(user);
   const refreshToken = authService.signRefreshToken(user);
   return res.status(201).json({ success: true, data: { accessToken, refreshToken } });
@@ -20,6 +26,9 @@ export async function login(req: Request, res: Response) {
   if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
   const valid = await userService.validatePassword(user, password);
   if (!valid) return res.status(401).json({ success: false, message: 'Invalid credentials' });
+  const loginIp = req.ip;
+  const userAgent = (req.headers['user-agent'] as string) || '';
+  await userService.recordLogin(user.id, { ip: loginIp, userAgent });
   const accessToken = authService.signAccessToken(user);
   const refreshToken = authService.signRefreshToken(user);
   return res.json({ success: true, data: { accessToken, refreshToken } });

@@ -3,7 +3,9 @@ import { isEmail, isRequired, minLength, validate } from '../../utils/validate';
 export const validateSignup = validate({
   email: [isRequired, isEmail],
   password: [isRequired, minLength(8)],
-  name: [isRequired]
+  name: [isRequired],
+  // timezone is optional; no specific validation rules
+  timezone: [],
 });
 
 export const validateLogin = validate({

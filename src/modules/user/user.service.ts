@@ -1,9 +1,23 @@
 import bcrypt from 'bcryptjs';
 import { User, UserDocument } from '../../models/user.model';
 
-export async function createUser(params: { email: string; password: string; name: string }): Promise<UserDocument> {
+export interface CreateUserParams {
+  email: string;
+  password: string;
+  name: string;
+  signupTimezone?: string;
+  signupIp?: string;
+}
+
+export async function createUser(params: CreateUserParams): Promise<UserDocument> {
   const hashedPassword = await bcrypt.hash(params.password, 12);
-  const user = await User.create({ email: params.email, password: hashedPassword, name: params.name });
+  const user = await User.create({
+    email: params.email,
+    password: hashedPassword,
+    name: params.name,
+    signupTimezone: params.signupTimezone,
+    signupIp: params.signupIp,
+  });
   return user;
 }
 
@@ -36,5 +50,17 @@ export async function resetPasswordWithToken(token: string, newPassword: string)
   user.resetPasswordExpires = null;
   await user.save();
   return true;
+}
+
+export async function recordLogin(userId: string, data: { ip?: string; userAgent?: string }): Promise<void> {
+  await User.findByIdAndUpdate(
+    userId,
+    {
+      lastLoginIp: data.ip,
+      lastLoginUserAgent: data.userAgent,
+      lastLoginAt: new Date(),
+    },
+    { new: false }
+  ).exec();
 }
 

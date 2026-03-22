@@ -9,6 +9,11 @@ export interface UserDocument extends Document {
   isEmailVerified: boolean;
   resetPasswordToken?: string | null;
   resetPasswordExpires?: Date | null;
+  signupTimezone?: string;
+  signupIp?: string;
+  lastLoginIp?: string;
+  lastLoginUserAgent?: string;
+  lastLoginAt?: Date;
 }
 
 const userSchema = new Schema<UserDocument>(
@@ -19,7 +24,12 @@ const userSchema = new Schema<UserDocument>(
     role: { type: String, enum: ['user', 'admin'], default: 'admin' },
     isEmailVerified: { type: Boolean, default: false },
     resetPasswordToken: { type: String, default: null },
-    resetPasswordExpires: { type: Date, default: null }
+    resetPasswordExpires: { type: Date, default: null },
+    signupTimezone: { type: String },
+    signupIp: { type: String },
+    lastLoginIp: { type: String },
+    lastLoginUserAgent: { type: String },
+    lastLoginAt: { type: Date }
   },
   { timestamps: true }
 );

@@ -10,8 +10,9 @@ import { errorHandler } from './middlewares/errorHandler';
 import { notFoundHandler } from './middlewares/notFoundHandler';
 import routes from './routes';
 import { requestLogger } from './middlewares/requestLogger';
-import i18nextMiddleware from "i18next-http-middleware";
-import i18next from 'i18next';
+import { swaggerUiServe, swaggerUiSetup } from './config/swagger';
+import * as i18nextMiddleware from 'i18next-http-middleware';
+import i18next from './i18n.config';
 import compression from 'compression';
 
 
@@ -48,6 +49,9 @@ app.get('/api1', (req, res) => {
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 
 app.use('/api', limiter);
+
+// API documentation (Swagger)
+app.use('/api-docs', swaggerUiServe, swaggerUiSetup);
 
 app.use('/api', routes);
 
