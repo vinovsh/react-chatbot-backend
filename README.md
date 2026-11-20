@@ -95,3 +95,16 @@ The widget uses `POST /api/public/bots/:botId/widget/activity` to register a
 visitor session on a published bot. The same session can submit a name and
 email with explicit consent to request a follow-up. A session counts once and
 creates at most one lead. Conversation transcripts stay in the browser.
+
+## Script widget and response collection
+
+The public widget configuration and activity endpoints support credential-free
+cross-origin requests so the script can run on a separate website. Dashboard
+routes continue to use configured dashboard origins and authentication.
+
+Visitor answers are persisted by session and exposed at
+`GET /api/workspaces/:workspaceId/bots/:botId/responses` for workspace members.
+The workspace owner can set a Zapier Catch Hook or Make custom webhook in
+Integrations. Webhook jobs are stored in MongoDB and retried in the background.
+A bot sends at most one delivery job per conversation, on completion or when the
+conversation first reaches a Webhook node.

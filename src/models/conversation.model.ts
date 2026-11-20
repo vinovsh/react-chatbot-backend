@@ -18,6 +18,10 @@ export interface ConversationDocument extends Document {
         ip: String,
         userAgent: String
       },
+      widgetAnswers: {
+        type: [{ _id: false, key: String, nodeId: String, value: String }],
+        default: undefined
+      },
       isCompleted: { type: Boolean, default: false }
     },
     { timestamps: true }

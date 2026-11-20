@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authGuard } from '../auth/auth.middleware';
-import { recordWidgetActivity } from './widget-activity.controller';
+import { getWebhook, putWebhook, deleteWebhook } from '../webhooks/webhooks';
+import { recordWidgetActivity, getWidgetResponses } from './widget-activity.controller';
 import { getWorkspaceSettings, renameWorkspace } from './workspace-settings.controller';
 import * as controller from './workspace.controller';
 import {
@@ -41,6 +42,10 @@ router.get(botPath + '/flow', authGuard, controller.getBotFlowController);
 router.put(botPath + '/flow', authGuard, validateSaveFlow, controller.putBotFlow);
 router.get(botPath + '/appearance', authGuard, controller.getAppearance);
 router.put(botPath + '/appearance', authGuard, validateAppearanceUpdate, controller.putAppearance);
+router.get(botPath + '/webhook', authGuard, getWebhook);
+router.put(botPath + '/webhook', authGuard, putWebhook);
+router.delete(botPath + '/webhook', authGuard, deleteWebhook);
+router.get(botPath + '/responses', authGuard, getWidgetResponses);
 router.get(botPath + '/leads', authGuard, validateListLeads, controller.getLeads);
 router.get(botPath + '/leads/:leadId', authGuard, controller.getLead);
 router.patch(botPath + '/leads/:leadId', authGuard, validateUpdateLead, controller.patchLead);

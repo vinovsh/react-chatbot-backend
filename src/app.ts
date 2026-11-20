@@ -26,7 +26,13 @@ if (Number.isSafeInteger(trustedProxyHops) && trustedProxyHops > 0) {
 app.use(helmet());
 const allowedOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
   .split(',').map((origin) => origin.trim()).filter(Boolean);
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors((req, callback) => {
+  const publicWidget = /^\/api\/public\/bots\/[a-f0-9]{24}\/widget(?:\/activity)?$/i.test(req.path) &&
+    ['GET', 'POST', 'OPTIONS'].includes(req.method);
+  callback(null, publicWidget
+    ? { origin: '*', methods: ['GET', 'POST'], allowedHeaders: ['Content-Type'] }
+    : { origin: allowedOrigins, credentials: true });
+}));
 app.use(compression());
 app.use('/api/users/me', express.json({ limit: '128kb' }));
 app.use(/^\/api\/(?:workspaces\/[^/]+\/)?bots\/[^/]+\/(?:flow|appearance)(?:\/preview)?$/, express.json({ limit: '512kb' }));

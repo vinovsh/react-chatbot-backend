@@ -316,6 +316,13 @@ export async function getPublishedWidget(botId: string) {
     id: node.id,
     type: node.type,
     message: typeof node.data?.message === 'string' ? node.data.message : '',
+    kind: node.type === 'QuestionNode' ? node.data?.kind : undefined,
+    options: Array.isArray(node.data?.options)
+      ? node.data.options.filter((option: unknown) => typeof option === 'string').slice(0, 30) : [],
+    min: typeof node.data?.min === 'number' ? node.data.min : undefined,
+    max: typeof node.data?.max === 'number' ? node.data.max : undefined,
+    url: typeof node.data?.url === 'string' ? node.data.url : undefined,
+    linkLabel: typeof node.data?.linkLabel === 'string' ? node.data.linkLabel : undefined,
     choices: node.type === 'MultiChoiceNode' && Array.isArray(node.data?.handle?.outputs)
       ? node.data.handle.outputs
           .filter((choice: any) => typeof choice?.title === 'string' && typeof choice?.uid === 'string')
