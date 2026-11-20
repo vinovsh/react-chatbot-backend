@@ -10,7 +10,11 @@ function validate(schema: Joi.ObjectSchema, prop: 'body' | 'query' = 'body') {
         errors: error.details.map((d: Joi.ValidationErrorItem) => ({ message: d.message, path: d.path }))
       });
     }
-    (req as any)[prop] = value;
+    if (prop === 'query') {
+      res.locals.validatedQuery = value;
+    } else {
+      req.body = value;
+    }
     next();
   };
 }
@@ -142,3 +146,15 @@ export const validateAppearancePreview = validate(
   })
 );
 
+
+export const validateUpdateLead = validate(
+  Joi.object({
+    name: Joi.string().trim().max(100).allow(''),
+    email: Joi.string().trim().email({ tlds: { allow: false } }).max(254).allow(''),
+    phone: Joi.string().trim().max(50).allow(''),
+    company: Joi.string().trim().max(100).allow(''),
+    status: Joi.string().valid('new', 'contacted', 'qualified', 'lost'),
+    source: Joi.string().trim().max(100).allow(''),
+    tags: Joi.array().items(Joi.string().trim().max(50)).max(20)
+  }).min(1)
+);

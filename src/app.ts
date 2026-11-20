@@ -18,10 +18,15 @@ import compression from 'compression';
 
 const app: Application = express();
 
-app.set('trust proxy', true);
+const trustedProxyHops = Number(process.env.TRUST_PROXY_HOPS ?? 0);
+if (Number.isSafeInteger(trustedProxyHops) && trustedProxyHops > 0) {
+  app.set('trust proxy', trustedProxyHops);
+}
 
 app.use(helmet());
-app.use(cors({ origin: true, credentials: true }));
+const allowedOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
+  .split(',').map((origin) => origin.trim()).filter(Boolean);
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(compression());
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -38,12 +43,6 @@ app.use((req, _res, next) => {
 
 app.use(morgan('combined'));
 app.use(requestLogger);
-
-// Debug route
-app.get('/api1', (req, res) => {
-  console.log('hello');
-  res.send('Hello from /api1');
-});
 
 // rate limiting
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });

@@ -11,6 +11,7 @@ import {
   validatePostMessage,
   validatePostLead,
   validateListLeads,
+  validateUpdateLead,
   validateAppearanceUpdate,
   validateAppearancePreview
 } from './workspace.validation';
@@ -26,6 +27,20 @@ router.get('/workspaces/:workspaceId', authGuard, controller.getWorkspace);
 router.post('/workspaces/:workspaceId/bots', authGuard, validateCreateBot, controller.postBot);
 router.get('/workspaces/:workspaceId/bots', authGuard, validateListBots, controller.getBots);
 router.patch('/bots/:botId', authGuard, validateUpdateBot, controller.patchBot);
+
+// Workspace-scoped routes used by the builder. Existing bot routes also remain available.
+const botPath = '/workspaces/:workspaceId/bots/:botId';
+router.get(botPath, authGuard, controller.getBot);
+router.patch(botPath, authGuard, validateUpdateBot, controller.patchBot);
+router.post(botPath + '/publish', authGuard, controller.postPublishBot);
+router.get(botPath + '/flow', authGuard, controller.getBotFlowController);
+router.put(botPath + '/flow', authGuard, validateSaveFlow, controller.putBotFlow);
+router.get(botPath + '/appearance', authGuard, controller.getAppearance);
+router.put(botPath + '/appearance', authGuard, validateAppearanceUpdate, controller.putAppearance);
+router.get(botPath + '/leads', authGuard, validateListLeads, controller.getLeads);
+router.get(botPath + '/leads/:leadId', authGuard, controller.getLead);
+router.patch(botPath + '/leads/:leadId', authGuard, validateUpdateLead, controller.patchLead);
+router.delete(botPath + '/leads/:leadId', authGuard, controller.deleteLead);
 
 // Bot Flow APIs
 router.get('/bots/:botId/flow', authGuard, controller.getBotFlowController);

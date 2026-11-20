@@ -12,7 +12,10 @@ export interface BotDocument extends Document {
       workspaceId: { type: Schema.Types.ObjectId, ref: 'Workspace', index: true },
       name: { type: String, required: true },
       status: { type: String, enum: ['draft', 'published'], default: 'draft' },
-      theme: { type: Object }
+      theme: { type: Object },
+      publishedFlowId: { type: Schema.Types.ObjectId, ref: 'BotFlow' },
+      publishedAppearance: { type: Schema.Types.Mixed, select: false },
+      publishedAt: { type: Date }
     },
     { timestamps: true }
   );

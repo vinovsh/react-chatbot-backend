@@ -72,16 +72,32 @@ export async function listBotsForWorkspace(workspaceId: string, query: { search?
   const workspaceObjectId = new Types.ObjectId(workspaceId);
   const filter: any = { workspaceId: workspaceObjectId };
   if (query.search) {
-    filter.name = { $regex: query.search, $options: 'i' };
+    filter.name = { $regex: query.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
   }
-  return Bot.find(filter).sort({ createdAt: -1 }).lean();
+  const bots = await Bot.find(filter).sort({ createdAt: -1 }).lean();
+  if (bots.length === 0) return bots;
+  const match = { botId: { $in: bots.map((bot) => bot._id) } };
+  const countByBot = [{ $match: match }, { $group: { _id: '$botId', total: { $sum: 1 } } }];
+  const [conversations, leads] = await Promise.all([
+    Conversation.aggregate<{ _id: Types.ObjectId; total: number }>(countByBot),
+    Lead.aggregate<{ _id: Types.ObjectId; total: number }>(countByBot)
+  ]);
+  const conversationCounts = new Map(conversations.map(({ _id, total }) => [_id.toString(), total]));
+  const leadCounts = new Map(leads.map(({ _id, total }) => [_id.toString(), total]));
+  return bots.map((bot) => ({
+    ...bot,
+    stats: {
+      totalConversations: conversationCounts.get(bot._id.toString()) ?? 0,
+      totalLeads: leadCounts.get(bot._id.toString()) ?? 0
+    }
+  }));
 }
 
-export async function getBotWithWorkspaceCheck(botId: string, userId: string) {
+export async function getBotWithWorkspaceCheck(botId: string, userId: string, workspaceId?: string) {
   if (!Types.ObjectId.isValid(botId)) return null;
   const bot = await Bot.findById(botId).lean();
-  if (!bot) return null;
-  const workspace = await getWorkspaceForUser((bot.workspaceId as any).toString(), userId);
+  if (!bot?.workspaceId || (workspaceId && !bot.workspaceId.equals(workspaceId))) return null;
+  const workspace = await getWorkspaceForUser(bot.workspaceId.toString(), userId);
   if (!workspace) return null;
   return bot;
 }
@@ -222,33 +238,12 @@ export async function upsertAppearanceForBot(botId: string, payload: any) {
   if (!existing) {
     const created = await BotAppearance.create({
       botId,
-      ...DEFAULT_APPEARANCE,
-      ...payload
+      ...buildAppearancePreview(DEFAULT_APPEARANCE, payload)
     });
     return created.toObject();
   }
 
-  // Shallow merge with nested merges for main sections
-  const merged = {
-    ...existing.toObject(),
-    ...payload,
-    avatar: { ...(existing as any).avatar, ...(payload.avatar || {}) },
-    theme: {
-      ...(existing as any).theme,
-      ...(payload.theme || {}),
-      solid: {
-        ...(existing as any).theme?.solid,
-        ...(payload.theme?.solid || {})
-      },
-      gradient: {
-        ...(existing as any).theme?.gradient,
-        ...(payload.theme?.gradient || {})
-      }
-    },
-    branding: { ...(existing as any).branding, ...(payload.branding || {}) }
-  };
-
-  existing.set(merged);
+  existing.set(buildAppearancePreview(existing.toObject(), payload));
   await existing.save();
   return existing.toObject();
 }
@@ -276,3 +271,29 @@ export function buildAppearancePreview(saved: any, overrides: any) {
   };
 }
 
+
+export async function publishBot(botId: string) {
+  const [flow, appearance] = await Promise.all([getBotFlow(botId), getAppearanceForBot(botId)]);
+  const start = flow?.nodes.find((node) => node?.type === 'webNodeStart');
+  if (!flow || !start || !flow.edges.some((edge) => edge?.source === start.id)) return null;
+
+  return Bot.findByIdAndUpdate(
+    botId,
+    {
+      status: 'published',
+      publishedFlowId: flow._id,
+      publishedAppearance: { ...appearance, isDraft: false },
+      publishedAt: new Date()
+    },
+    { new: true }
+  ).lean();
+}
+
+export async function getPublishedBotAppearance(botId: string) {
+  if (!Types.ObjectId.isValid(botId)) return null;
+  const bot = await Bot.findOne({ _id: botId, status: 'published' }).select('+publishedAppearance').lean();
+  if (!bot) return null;
+  if (bot.publishedAppearance) return bot.publishedAppearance;
+  const legacyAppearance = await getAppearanceForBot(botId, { publishedOnly: true });
+  return legacyAppearance.isDraft ? null : legacyAppearance;
+}

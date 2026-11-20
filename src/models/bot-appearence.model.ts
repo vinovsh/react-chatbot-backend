@@ -66,7 +66,7 @@ const botAppearanceSchema = new Schema(
         colors: {
           type: [String],
           validate: {
-            validator: (v: string[]) => !v || v.length >= 2,
+            validator: (v: string[]) => !v || v.length === 0 || v.length >= 2,
             message: 'Gradient requires at least two colors'
           }
         }
