@@ -275,7 +275,14 @@ export function buildAppearancePreview(saved: any, overrides: any) {
 export async function publishBot(botId: string) {
   const [flow, appearance] = await Promise.all([getBotFlow(botId), getAppearanceForBot(botId)]);
   const start = flow?.nodes.find((node) => node?.type === 'webNodeStart');
-  if (!flow || !start || !flow.edges.some((edge) => edge?.source === start.id)) return null;
+  if (!flow || !start) return null;
+  const validNodes = flow.nodes.every((node) => typeof node?.id === 'string' &&
+    ['webNodeStart', 'MessageNode', 'QuestionNode', 'MultiChoiceNode'].includes(node.type));
+  const nodeIds = new Set(flow.nodes.map((node) => node?.id));
+  if (!validNodes || nodeIds.size !== flow.nodes.length) return null;
+  if (!flow.edges.every((edge) => nodeIds.has(edge?.source) && nodeIds.has(edge?.target) &&
+    edge.source !== edge.target && edge.target !== start.id)) return null;
+  if (!flow.edges.some((edge) => edge.source === start.id)) return null;
 
   return Bot.findByIdAndUpdate(
     botId,
@@ -296,4 +303,25 @@ export async function getPublishedBotAppearance(botId: string) {
   if (bot.publishedAppearance) return bot.publishedAppearance;
   const legacyAppearance = await getAppearanceForBot(botId, { publishedOnly: true });
   return legacyAppearance.isDraft ? null : legacyAppearance;
+}
+
+export async function getPublishedWidget(botId: string) {
+  if (!Types.ObjectId.isValid(botId)) return null;
+  const bot = await Bot.findOne({ _id: botId, status: 'published' }).select('+publishedAppearance').lean();
+  if (!bot?.publishedFlowId) return null;
+  const flow = await BotFlow.findOne({ _id: bot.publishedFlowId, botId }).lean();
+  if (!flow) return null;
+
+  const nodes = flow.nodes.map((node) => ({
+    id: node.id,
+    type: node.type,
+    message: typeof node.data?.message === 'string' ? node.data.message : '',
+    choices: node.type === 'MultiChoiceNode' && Array.isArray(node.data?.handle?.outputs)
+      ? node.data.handle.outputs
+          .filter((choice: any) => typeof choice?.title === 'string' && typeof choice?.uid === 'string')
+          .map((choice: any) => ({ title: choice.title, id: choice.uid }))
+      : []
+  }));
+  const edges = flow.edges.map(({ source, target, sourceHandle }) => ({ source, target, sourceHandle }));
+  return { name: bot.name, nodes, edges, appearance: bot.publishedAppearance };
 }

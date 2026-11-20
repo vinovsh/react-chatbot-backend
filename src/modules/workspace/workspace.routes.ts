@@ -67,6 +67,7 @@ router.post(
   validateAppearancePreview,
   controller.postAppearancePreview
 );
+router.get('/public/bots/:botId/widget', controller.getPublicWidget);
 router.get('/public/bots/:botId/appearance', controller.getPublicAppearance);
 
 export default router;

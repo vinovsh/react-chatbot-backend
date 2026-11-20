@@ -77,3 +77,10 @@ The dashboard uses these authenticated routes under
 Publication requires a saved flow with a connected start node. The public
 appearance route serves the published settings, so subsequent draft edits
 stay private until the next publication.
+
+The dashboard's Installation page generates an iframe for a published bot.
+Serve the built frontend with SPA fallback for `/widget`, and allow that
+page to be framed by the websites where the chatbot is installed. The public
+`GET /api/public/bots/:botId/widget` endpoint serves the published graph used
+by the iframe. Messages and replies in the iframe currently stay in the
+visitor's browser.

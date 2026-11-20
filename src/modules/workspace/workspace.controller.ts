@@ -22,6 +22,7 @@ import {
   upsertAppearanceForBot,
   publishBot,
   getPublishedBotAppearance,
+  getPublishedWidget,
   buildAppearancePreview
 } from './workspace.service';
 
@@ -305,4 +306,10 @@ export async function getPublicAppearance(req: Request, res: Response) {
     return res.status(404).json({ success: false, message: 'Appearance not found' });
   }
   return res.json({ success: true, data: appearance });
+}
+
+export async function getPublicWidget(req: Request, res: Response) {
+  const widget = await getPublishedWidget(req.params.botId);
+  if (!widget) return res.status(404).json({ success: false, message: 'Published chatbot not found' });
+  return res.json({ success: true, data: widget });
 }
