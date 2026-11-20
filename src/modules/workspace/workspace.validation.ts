@@ -83,11 +83,16 @@ export const validateListLeads = validate(
   'query'
 );
 
+const imageUrl = Joi.alternatives().try(
+  Joi.string().max(2048).uri({ scheme: ['https', 'http'] }),
+  Joi.string().max(120_000).pattern(/^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/]+={0,2}$/i)
+);
+
 export const validateAppearanceUpdate = validate(
   Joi.object({
     avatar: Joi.object({
       type: Joi.string().valid('default', 'custom').optional(),
-      url: Joi.string().uri().optional()
+      url: imageUrl.optional()
     }).optional(),
     theme: Joi.object({
       type: Joi.string().valid('solid', 'gradient').optional(),
@@ -109,7 +114,7 @@ export const validateAppearanceUpdate = validate(
     position: Joi.string().valid('bottom-left', 'bottom-right').optional(),
     branding: Joi.object({
       showBranding: Joi.boolean().optional(),
-      brandLogoUrl: Joi.string().uri().optional()
+      brandLogoUrl: imageUrl.allow(null).optional()
     }).optional(),
     isDraft: Joi.boolean().optional()
   })
@@ -119,7 +124,7 @@ export const validateAppearancePreview = validate(
   Joi.object({
     avatar: Joi.object({
       type: Joi.string().valid('default', 'custom').optional(),
-      url: Joi.string().uri().optional()
+      url: imageUrl.optional()
     }).optional(),
     theme: Joi.object({
       type: Joi.string().valid('solid', 'gradient').optional(),
@@ -141,7 +146,7 @@ export const validateAppearancePreview = validate(
     position: Joi.string().valid('bottom-left', 'bottom-right').optional(),
     branding: Joi.object({
       showBranding: Joi.boolean().optional(),
-      brandLogoUrl: Joi.string().uri().optional()
+      brandLogoUrl: imageUrl.allow(null).optional()
     }).optional()
   })
 );

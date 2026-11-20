@@ -84,3 +84,14 @@ page to be framed by the websites where the chatbot is installed. The public
 `GET /api/public/bots/:botId/widget` endpoint serves the published graph used
 by the iframe. Messages and replies in the iframe currently stay in the
 visitor's browser.
+
+## Workspace settings and widget activity
+
+The dashboard reads `GET /api/workspaces/:workspaceId/settings` for workspace
+details and the stored member roster. The owner can rename the workspace using
+`PATCH` on the same route.
+
+The widget uses `POST /api/public/bots/:botId/widget/activity` to register a
+visitor session on a published bot. The same session can submit a name and
+email with explicit consent to request a follow-up. A session counts once and
+creates at most one lead. Conversation transcripts stay in the browser.

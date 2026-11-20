@@ -29,13 +29,14 @@ export async function validatePassword(user: UserDocument, password: string): Pr
   return bcrypt.compare(password, user.password);
 }
 
-export async function getProfile(userId: string): Promise<Pick<UserDocument, 'email' | 'name' | 'role'> | null> {
-  const user = await User.findById(userId).select('email name role').lean();
-  return (user as any) || null;
+const profileFields = 'email name role isEmailVerified signupTimezone avatarUrl';
+
+export async function getProfile(userId: string) {
+  return User.findById(userId).select(profileFields).lean();
 }
 
-export async function updateProfile(userId: string, data: Partial<{ name: string }>) {
-  return User.findByIdAndUpdate(userId, data, { new: true }).select('email name role').lean();
+export async function updateProfile(userId: string, data: Partial<{ name: string; avatarUrl: string }>) {
+  return User.findByIdAndUpdate(userId, { $set: data }, { new: true }).select(profileFields).lean();
 }
 
 export async function setResetToken(userId: string, token: string, expires: Date): Promise<void> {

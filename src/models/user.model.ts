@@ -5,6 +5,7 @@ export interface UserDocument extends Document {
   email: string;
   password: string;
   name: string;
+  avatarUrl?: string;
   role: 'user' | 'admin';
   isEmailVerified: boolean;
   resetPasswordToken?: string | null;
@@ -21,6 +22,7 @@ const userSchema = new Schema<UserDocument>(
     email: { type: String, required: true, unique: true, lowercase: true, index: true },
     password: { type: String, required: true },
     name: { type: String, required: true },
+    avatarUrl: { type: String },
     role: { type: String, enum: ['user', 'admin'], default: 'admin' },
     isEmailVerified: { type: Boolean, default: false },
     resetPasswordToken: { type: String, default: null },

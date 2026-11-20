@@ -25,7 +25,7 @@ export interface BotAppearanceDocument extends Document {
 
   branding: {
     showBranding: boolean;
-    brandLogoUrl?: string;
+    brandLogoUrl?: string | null;
   };
 
   isDraft: boolean;

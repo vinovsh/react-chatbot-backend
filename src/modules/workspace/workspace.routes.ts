@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { authGuard } from '../auth/auth.middleware';
+import { recordWidgetActivity } from './widget-activity.controller';
+import { getWorkspaceSettings, renameWorkspace } from './workspace-settings.controller';
 import * as controller from './workspace.controller';
 import {
   validateCreateWorkspace,
@@ -22,6 +24,8 @@ const router = Router();
 router.post('/workspaces', authGuard, validateCreateWorkspace, controller.postWorkspace);
 router.get('/workspaces', authGuard, controller.getWorkspaces);
 router.get('/workspaces/:workspaceId', authGuard, controller.getWorkspace);
+router.get('/workspaces/:workspaceId/settings', authGuard, getWorkspaceSettings);
+router.patch('/workspaces/:workspaceId/settings', authGuard, renameWorkspace);
 
 // Bot APIs
 router.post('/workspaces/:workspaceId/bots', authGuard, validateCreateBot, controller.postBot);
@@ -68,6 +72,7 @@ router.post(
   controller.postAppearancePreview
 );
 router.get('/public/bots/:botId/widget', controller.getPublicWidget);
+router.post('/public/bots/:botId/widget/activity', recordWidgetActivity);
 router.get('/public/bots/:botId/appearance', controller.getPublicAppearance);
 
 export default router;

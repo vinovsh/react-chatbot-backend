@@ -28,6 +28,8 @@ const allowedOrigins = (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
   .split(',').map((origin) => origin.trim()).filter(Boolean);
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(compression());
+app.use('/api/users/me', express.json({ limit: '128kb' }));
+app.use(/^\/api\/(?:workspaces\/[^/]+\/)?bots\/[^/]+\/(?:flow|appearance)(?:\/preview)?$/, express.json({ limit: '512kb' }));
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
